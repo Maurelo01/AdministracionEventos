@@ -1,6 +1,12 @@
 com/mycompany/administracioneventos/modelos/TipoInscripcion.class
+<<<<<<< Updated upstream
+=======
+com/mycompany/administracioneventos/modelos/Actividad.class
+com/mycompany/administracioneventos/modelos/Pago.class
+>>>>>>> Stashed changes
 com/mycompany/administracioneventos/modelos/TipoEvento.class
 com/mycompany/administracioneventos/modelos/Evento.class
+com/mycompany/administracioneventos/modelos/TipoActividad.class
 com/mycompany/administracioneventos/modelos/TipoParticipante.class
 com/mycompany/administracioneventos/modelos/Participante.class
 com/mycompany/administracioneventos/AdministracionEventos.class
