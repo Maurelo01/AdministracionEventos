@@ -9,3 +9,4 @@ target/
 # Ignorar archivos compilados y generados
 target/
 *.class
+target/
