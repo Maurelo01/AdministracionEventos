@@ -4,3 +4,8 @@ nbproject/private/
 *.log
 .DS_Store
 Thumbs.db
+target/
+
+# Ignorar archivos compilados y generados
+target/
+*.class
