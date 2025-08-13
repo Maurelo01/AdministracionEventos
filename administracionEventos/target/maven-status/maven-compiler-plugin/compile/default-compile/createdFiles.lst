@@ -1,7 +1,10 @@
 com/mycompany/administracioneventos/modelos/TipoInscripcion.class
+com/mycompany/administracioneventos/modelos/Pago.class
 com/mycompany/administracioneventos/modelos/TipoEvento.class
 com/mycompany/administracioneventos/modelos/Evento.class
 com/mycompany/administracioneventos/modelos/TipoParticipante.class
+com/mycompany/administracioneventos/servicios/ValidarInscripcion.class
 com/mycompany/administracioneventos/modelos/Participante.class
+com/mycompany/administracioneventos/modelos/MetodoPago.class
 com/mycompany/administracioneventos/AdministracionEventos.class
 com/mycompany/administracioneventos/modelos/Inscripcion.class

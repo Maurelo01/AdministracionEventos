@@ -4,9 +4,9 @@
  */
 package com.mycompany.administracioneventos.modelos;
 
-public enum TipoParticipante 
+public enum MetodoPago 
 {
-    ESTUDIANTE,
-    PROFESIONAL,
-    INVITADO
+    EFECTIVO,
+    TRANSFERENCIA,
+    TARJETA
 }

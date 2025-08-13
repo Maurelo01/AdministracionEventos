@@ -7,9 +7,9 @@ package com.mycompany.administracioneventos.modelos;
 public class Participante 
 {
     private String correo;               // PK
-    private String nombreCompleto;       // Máx. 45 caracteres
+    private String nombreCompleto;       // Max 45 caracteres
     private TipoParticipante tipo;       // Enum: ESTUDIANTE, PROFESIONAL, INVITADO
-    private String institucion;          // Máx. 150 caracteres
+    private String institucion;          // Max 150 caracteres
 
     public Participante(String correo, String nombreCompleto, TipoParticipante tipo, String institucion) 
     {
