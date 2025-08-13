@@ -6,7 +6,8 @@ package com.mycompany.administracioneventos.modelos;
 
 import java.time.LocalDate;
 
-public class Evento {
+public class Evento 
+{
     private String codigo;          // PK
     private LocalDate fecha;
     private TipoEvento tipo;        // enums
