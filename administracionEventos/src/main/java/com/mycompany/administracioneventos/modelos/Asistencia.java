@@ -58,4 +58,10 @@ public class Asistencia
                 ", fechaRegistro=" + fechaRegistro +
                 '}';
     }
+    
+    public boolean esDuplicada(Asistencia otra) 
+    {
+        return this.participante.getCorreo().equalsIgnoreCase(otra.getParticipante().getCorreo())
+                && this.actividad.getCodigoActividad().equalsIgnoreCase(otra.getActividad().getCodigoActividad());
+    }
 }
