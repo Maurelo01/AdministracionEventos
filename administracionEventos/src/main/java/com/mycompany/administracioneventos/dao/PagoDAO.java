@@ -4,6 +4,7 @@
  */
 package com.mycompany.administracioneventos.dao;
 
+import com.mycompany.administracioneventos.modelos.Pago;
 import com.mycompany.administracioneventos.util.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,6 +28,24 @@ public class PagoDAO
         catch (SQLException e)
         {
             System.err.println("Error al verificar pago: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public boolean registrarPago(Pago pago)
+    {
+        String sql = "INSERT INTO pago (participante_correo, evento_codigo, metodo, monto) VALUES (?,?,?,?)";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) 
+        {
+            ps.setString(1, pago.getParticipante().getCorreo());
+            ps.setString(2, pago.getEvento().getCodigo());
+            ps.setString(3, pago.getMetodo().name());
+            ps.setDouble(4, pago.getMonto());
+            return ps.executeUpdate() > 0;
+        }
+        catch (SQLException e)
+        {
+            System.err.println("Error al registrar pago: " + e.getMessage());
             return false;
         }
     }
