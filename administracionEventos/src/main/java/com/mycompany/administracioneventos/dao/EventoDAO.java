@@ -16,6 +16,18 @@ public class EventoDAO
 {
     public boolean agregarEvento(Evento evento) throws SQLException // Se encarga de crear un nuevo evento
     {
+        if (evento.getCupoMaximo() <= 0)
+        {
+            System.err.println("El cupo máximo debe ser mayor a 0.");
+            return false;
+        }
+        
+        if (existeEvento(evento.getCodigo())) 
+        {
+            System.err.println("Ya existe un evento con el codigo: " + evento.getCodigo());
+            return false;
+        }
+        
         String sql = "INSERT INTO evento (codigo, fecha, tipo, titulo, ubicacion, cupo_maximo) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) 
         {
@@ -30,6 +42,22 @@ public class EventoDAO
         catch (SQLException e)
         {
             System.err.println("Error al agregar evento: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public boolean existeEvento(String codigo)
+    {
+        String sql = "SELECT 1 FROM evento WHERE codigo = ?";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+        {
+            stmt.setString(1, codigo);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        }
+        catch (SQLException e)
+        {
+            System.err.println("Error al verificar evento: " + e.getMessage());
             return false;
         }
     }
@@ -91,6 +119,11 @@ public class EventoDAO
     
     public boolean actualizarEvento(Evento evento) // Se encarga de actualizar los eventos
     {
+        if (evento.getCupoMaximo() <= 0)
+        {
+            System.err.println("El cupo máximo debe ser mayor a 0.");
+            return false;
+        }
         String sql = "UPDATE evento SET fecha=?, tipo=?, titulo=?, ubicacion=?, cupo_maximo=? WHERE codigo=?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
         {
