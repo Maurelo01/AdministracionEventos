@@ -190,7 +190,7 @@ public class ActividadDAO
     
     public Actividad buscarActividad(String codigoActividad) // Busca una actividad
     {
-        String sql = "SELECT envento_codigo, tipo, titulo, encargado_correo, hora_inicio, hora_fin, cupo_maximo FROM actividad WHERE codigo = ?";
+        String sql = "SELECT evento_codigo, tipo, titulo, encargado_correo, hora_inicio, hora_fin, cupo_maximo FROM actividad WHERE codigo = ?";
         try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql))
         {
             ps.setString(1, codigoActividad);
