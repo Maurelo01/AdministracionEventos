@@ -123,6 +123,25 @@ public class InscripcionDAO
         return false;
     }
     
+    private boolean existePago(String correo, String codigoEvento)
+    {
+        String sql = "SELECT 1 FROM pago WHERE participante_correo=? AND evento_codigo=? LIMIT 1";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, correo);
+            ps.setString(2, codigoEvento);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                return rs.next();
+            }
+        }
+        catch (SQLException e)
+        {
+            System.err.println("Error al consultar estado de validacion: " + e.getMessage());
+            return false;
+        }
+    }
+    
     // CRUD
     public boolean agregarInscripcion(Inscripcion insc) // Agrega la inscripcion y hace las verificaciones
     {
@@ -178,8 +197,7 @@ public class InscripcionDAO
             System.err.println("La inscripción ya estaba validada.");
             return false;
         }
-        PagoDAO pagoDAO = new PagoDAO();
-        if (!pagoDAO.existePago(correo, codEvento))
+        if (!existePago(correo, codEvento))
         {
              System.err.println("No se puede validar: no hay pago registrado.");
              return false;
