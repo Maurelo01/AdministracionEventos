@@ -23,7 +23,7 @@ public class InscripcionServicio
         this.eventoDAO = new EventoDAO();
     }
     
-    public boolean registrarInscripcionConstruccion(String correoParticipante, String codigoEvento, TipoInscripcion tipo) // Construye y registra la inscripcion  
+    public boolean registrarInscripcion(String correoParticipante, String codigoEvento, TipoInscripcion tipo) // Construye y registra la inscripcion  
     {
         Participante p = participanteDAO.buscarParticipante(correoParticipante);
         Evento e = eventoDAO.buscarEvento(codigoEvento);
