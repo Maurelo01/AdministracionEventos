@@ -7,6 +7,7 @@ package com.mycompany.administracioneventos.dao;
 import com.mycompany.administracioneventos.modelos.Participante;
 import com.mycompany.administracioneventos.modelos.TipoParticipante;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,6 +166,52 @@ public class ParticipanteDAO
         {
             System.err.println("Error al eliminar participante: " + e.getMessage());
             return false;
+        }
+    }
+    
+    public ResultadoOperacion eliminarParticipanteSeguro(String correo)
+    {
+        String qInscripcion = "SELECT COUNT(*) FROM inscripcion WHERE participante_correo=?";
+        String qPago = "SELECT COUNT(*) FROM pago WHERE participante_correo=?";
+        String qAsistencia = "SELECT COUNT(*) FROM asistencia WHERE participante_correo=?";
+        String qCertificado = "SELECT COUNT(*) FROM certificado WHERE participante_correo=?";
+        String qEncargado = "SELECT COUNT(*) FROM actividad WHERE participante_correo=?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            int inscripcion = contar(conn, qInscripcion, correo);
+            int pago = contar(conn, qPago, correo);
+            int asistencia = contar(conn, qAsistencia, correo);
+            int certificado = contar(conn, qCertificado, correo);
+            int encargado = contar(conn, qEncargado, correo);
+            
+            if (inscripcion + pago + asistencia + certificado + encargado > 0)
+            {
+                return ResultadoOperacion.fallo(String.format("No se puede eliminar el participante, ya que el participante %s tiene archivos dependientes: ",
+                        "inscripciones = %d, pagos = %d, asistencia = %d, certificado = %d, encargado = %d", inscripcion, pago, asistencia, certificado, encargado));
+            }
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM participante WHERE correo=?"))
+            {
+                ps.setString(1, correo);
+                int filas = ps.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Participante eliminado.") : ResultadoOperacion.fallo("Participante no eliminado.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar participante: " + e.getMessage());
+        }
+    }
+    
+    private int contar(Connection conn,String sql, String parametro) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
         }
     }
 }

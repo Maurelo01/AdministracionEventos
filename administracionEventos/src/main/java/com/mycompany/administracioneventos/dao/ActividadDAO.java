@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.dao;
 
 import com.mycompany.administracioneventos.modelos.*;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -261,4 +262,41 @@ public class ActividadDAO
             return false;
         }
     }
+    
+    public ResultadoOperacion eliminarActividadSeguro(String codigoActividad)
+    {
+        String qAsistencia = "SELECT COUNT(*) FROM asistencia WHERE actividad_codigo=?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            int asistencia = contar(conn, qAsistencia, codigoActividad);
+            
+            if (asistencia > 0)
+            {
+                return ResultadoOperacion.fallo("No se puede eliminar la actividad, ya que tiene asistencias registradas: " + asistencia);
+            }
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM actividad WHERE codigo=?"))
+            {
+                ps.setString(1, codigoActividad);
+                int filas = ps.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Actividad eliminada.") : ResultadoOperacion.fallo("Actividad no eliminada.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar actividad: " + e.getMessage());
+        }
+    }
+    
+    private int contar(Connection conn,String sql, String parametro) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }   
 }

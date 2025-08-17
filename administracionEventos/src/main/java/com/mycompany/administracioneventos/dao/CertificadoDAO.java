@@ -8,6 +8,7 @@ import com.mycompany.administracioneventos.modelos.Certificado;
 import com.mycompany.administracioneventos.modelos.Evento;
 import com.mycompany.administracioneventos.modelos.Participante;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,6 +159,21 @@ public class CertificadoDAO
         {
             System.err.println("Error al eliminar certificado: " + e.getMessage());
             return false;
+        }
+    }
+    
+    public ResultadoOperacion eliminarCertificadoSeguro(String correoParticipante, String codigoEvento)
+    {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement("DELETE FROM certificado WHERE participante_correo = ? AND evento_codigo = ?"))
+        {
+            ps.setString(1, correoParticipante);
+            ps.setString(2, codigoEvento);
+            int filas = ps.executeUpdate();
+            return filas > 0 ? ResultadoOperacion.ok("Certificado eliminado.") : ResultadoOperacion.fallo("Certificado no encontrado.");
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar Certificado: " + e.getMessage());
         }
     }
 }

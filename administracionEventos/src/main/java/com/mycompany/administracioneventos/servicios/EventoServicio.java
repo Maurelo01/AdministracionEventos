@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.servicios;
 
 import com.mycompany.administracioneventos.dao.EventoDAO;
 import com.mycompany.administracioneventos.modelos.Evento;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -49,5 +50,10 @@ public class EventoServicio
     public boolean eliminarEvento(String codigo)
     {
         return eventoDAO.eliminarEvento(codigo);
+    }
+    
+    public ResultadoOperacion eliminarEventoSeguro(String codigoEvento)
+    {
+        return eventoDAO.eliminarEventoSeguro(codigoEvento);
     }
 }
