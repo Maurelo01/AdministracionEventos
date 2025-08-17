@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.servicios;
 
 import com.mycompany.administracioneventos.dao.ParticipanteDAO;
 import com.mycompany.administracioneventos.modelos.Participante;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.util.List;
 
 public class ParticipanteServicio 
@@ -34,5 +35,10 @@ public class ParticipanteServicio
     public boolean eliminarParticipante(String correo)
     {
         return participanteDAO.eliminarParticipante(correo);
+    }
+    
+    public ResultadoOperacion eliminarParticipanteSeguro(String correoParticipante)
+    {
+        return participanteDAO.eliminarParticipanteSeguro(correoParticipante);
     }
 }

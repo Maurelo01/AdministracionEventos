@@ -7,6 +7,7 @@ package com.mycompany.administracioneventos.dao;
 import com.mycompany.administracioneventos.modelos.Evento;
 import com.mycompany.administracioneventos.modelos.TipoEvento;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -155,6 +156,53 @@ public class EventoDAO
         {
             System.err.println("Error al eliminar evento: " + e.getMessage());
             return false;   
+        }
+    }
+    
+    public ResultadoOperacion eliminarEventoSeguro(String codigo)
+    {
+        String qActividad = "SELECT COUNT(*) FROM actividad WHERE evento_codigo=?";
+        String qInscripcion = "SELECT COUNT(*) FROM inscripcion WHERE evento_codigo=?";
+        String qPago = "SELECT COUNT(*) FROM pago WHERE evento_codigo=?";
+        String qCertificado = "SELECT COUNT(*) FROM certificado WHERE evento_codigo=?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            int actividad = contar(conn, qActividad, codigo);
+            int inscripcion = contar(conn, qInscripcion, codigo);
+            int pago = contar(conn, qPago, codigo);
+            int certificado = contar(conn, qCertificado, codigo);
+
+            if (actividad + inscripcion + pago + certificado > 0)
+            {
+                return ResultadoOperacion.fallo(String.format(
+                    "No se puede eliminar el evento %s: actividades=%d, inscripciones=%d, pagos=%d, certificados=%d. " +
+                    "Elimina primero los registros dependientes.",
+                    codigo, actividad, inscripcion, pago, certificado));
+            }
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM evento WHERE codigo=?"))
+            {
+                ps.setString(1, codigo);
+                int filas = ps.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Evento eliminado.")
+                                 : ResultadoOperacion.fallo("Evento no encontrado.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar evento: " + e.getMessage());
+        }
+    }
+    
+    private int contar(Connection conn,String sql, String parametro) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
         }
     }
 }

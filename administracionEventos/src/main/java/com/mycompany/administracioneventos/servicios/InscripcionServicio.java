@@ -8,6 +8,7 @@ import com.mycompany.administracioneventos.dao.EventoDAO;
 import com.mycompany.administracioneventos.dao.InscripcionDAO;
 import com.mycompany.administracioneventos.dao.ParticipanteDAO;
 import com.mycompany.administracioneventos.modelos.*;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.util.List;
 
 public class InscripcionServicio 
@@ -58,5 +59,10 @@ public class InscripcionServicio
     public boolean eliminarInscripcion(String correoParticipante, String codigoEvento)
     {
         return dao.eliminarInscripcion(correoParticipante, codigoEvento);
+    }
+    
+    public ResultadoOperacion eliminarInscripcionSeguro(String correoParticipante, String codigoEvento)
+    {
+        return dao.eliminarInscripcionSeguro(correoParticipante, codigoEvento);
     }
 }

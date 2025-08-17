@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.servicios;
 
 import com.mycompany.administracioneventos.dao.*;
 import com.mycompany.administracioneventos.modelos.*;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.util.List;
 public class PagoServicio 
 {
@@ -60,5 +61,10 @@ public class PagoServicio
     public boolean eliminarPagoPorId(int id)
     {
         return pagoDAO.eliminarPagoPorId(id);
+    }
+    
+    public ResultadoOperacion eliminarCertificadoSeguro(int id)
+    {
+        return pagoDAO.eliminarPagoSeguro(id);
     }
 }

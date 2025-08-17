@@ -7,6 +7,7 @@ package com.mycompany.administracioneventos.servicios;
 import com.mycompany.administracioneventos.dao.AsistenciaDAO;
 import com.mycompany.administracioneventos.modelos.Actividad;
 import com.mycompany.administracioneventos.modelos.Asistencia;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.util.List;
 
 public class AsistenciaServicio 
@@ -36,5 +37,10 @@ public class AsistenciaServicio
     public List<Asistencia> listarAsistencias()
     {
         return asistenciaDAO.listarAsistencias();
+    }
+    
+    public ResultadoOperacion eliminarAsistenciaSeguro(String correoParticipante, String codigoActividad)
+    {
+        return asistenciaDAO.eliminarAsistenciaSeguro(correoParticipante, codigoActividad);
     }
 }

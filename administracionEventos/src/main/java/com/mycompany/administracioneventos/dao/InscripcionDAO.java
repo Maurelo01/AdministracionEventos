@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.dao;
 
 import com.mycompany.administracioneventos.modelos.*;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -286,4 +287,55 @@ public class InscripcionDAO
             return false;
         }
     }
+    
+    public ResultadoOperacion eliminarInscripcionSeguro(String correoParticipante, String codigoEvento)
+    {
+        String qPago        = "SELECT COUNT(*) FROM pago WHERE participante_correo = ? AND evento_codigo = ?";
+        String qCertificado = "SELECT COUNT(*) FROM certificado WHERE participante_correo = ? AND evento_codigo = ?";
+        String qEncargado   = "SELECT COUNT(*) FROM actividad WHERE evento_codigo = ? AND encargado_correo = ?";
+        String qAsistencia  = "SELECT COUNT(*) FROM asistencia a JOIN actividad ac ON ac.codigo = a.actividad_codigo WHERE a.participante_correo = ? AND ac.evento_codigo = ?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            int pago        = contar2(conn, qPago, correoParticipante, codigoEvento);
+            int certificado = contar2(conn, qCertificado, correoParticipante, codigoEvento);
+            int encargado   = contar2(conn, qEncargado, codigoEvento, correoParticipante); // ojo: evento primero, luego correo
+            int asistencia  = contar2(conn, qAsistencia, correoParticipante, codigoEvento);
+
+            if (pago + certificado + encargado + asistencia > 0)
+            {
+                return ResultadoOperacion.fallo(String.format(
+                    "No se puede eliminar la inscripcion (%s, %s): pagos=%d, certificados=%d, actividades_encargado=%d, asistencias=%d.",
+                    correoParticipante, codigoEvento, pago, certificado, encargado, asistencia
+                ));
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM inscripcion WHERE participante_correo = ? AND evento_codigo = ?"))
+            {
+                ps.setString(1, correoParticipante);
+                ps.setString(2, codigoEvento);
+                int filas = ps.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Inscripcion eliminada.")
+                                 : ResultadoOperacion.fallo("Inscripcion no encontrada.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar inscripcion: " + e.getMessage());
+        }
+    }
+
+    private int contar2(Connection conn, String sql, String parametro1, String parametro2) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro1);
+            ps.setString(2, parametro2);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
 }

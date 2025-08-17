@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.dao;
 
 import com.mycompany.administracioneventos.modelos.*;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -207,6 +208,77 @@ public class PagoDAO
             return false;
         }
     }
+   
+    public ResultadoOperacion eliminarPagoSeguro(int id)
+    {
+        String qInfo = "SELECT participante_correo, evento_codigo FROM pago WHERE id = ?";
+        String qContar = "SELECT COUNT(*) FROM pago WHERE participante_correo = ? AND evento_codigo = ? ";
+        String qValidado = "SELECT validada FROM inscripcion WHERE participante_correo = ? AND evento_codigo = ?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            String correoParticipante = null;
+            String codigoEvento = null;
+            try (PreparedStatement ps1 = conn.prepareStatement(qInfo))
+            {
+                ps1.setInt(1, id);
+                try (ResultSet rs = ps1.executeQuery())
+                {
+                    if (rs.next())
+                    {
+                        correoParticipante = rs.getString(1);
+                        codigoEvento = rs.getString(2);
+                    }
+                }
+            }
+            if (correoParticipante == null)
+            {
+                return ResultadoOperacion.fallo("Pago no encotrado.");
+            }
+            int totalPagos = contar2(conn, qContar, correoParticipante, codigoEvento);
+            boolean validada = consultarValidada(conn, qValidado, correoParticipante, codigoEvento);
+            if (totalPagos <= 1 && validada)
+            {
+                return ResultadoOperacion.fallo("No se puede eliminar el pago ya que es el unico y la inscripcion esta validada."); 
+            }
+            try (PreparedStatement ps2 = conn.prepareStatement("DELETE FROM pago WHERE id = ?"))
+            {
+                ps2.setString(1, correoParticipante);
+                ps2.setString(2, codigoEvento);
+                int filas = ps2.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Pago eliminado.") : ResultadoOperacion.fallo("Pago no encontrado.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar pago: " + e.getMessage());
+        }
+    }
     
+    private int contar2(Connection conn, String sql, String parametro1, String parametro2) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro1);
+            ps.setString(2, parametro2);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+    
+    private boolean consultarValidada(Connection conn, String sql, String correoParticipante, String codigoEvento) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+            {
+                ps.setString(1, correoParticipante);
+                ps.setString(2, codigoEvento);
+                try (ResultSet rs = ps.executeQuery())
+                {
+                    return rs.next() && rs.getBoolean(1);
+                }
+            }
+    }
     
 }

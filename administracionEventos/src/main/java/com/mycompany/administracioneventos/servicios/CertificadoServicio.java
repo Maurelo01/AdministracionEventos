@@ -12,6 +12,7 @@ import com.mycompany.administracioneventos.modelos.Asistencia;
 import com.mycompany.administracioneventos.modelos.Certificado;
 import com.mycompany.administracioneventos.modelos.Evento;
 import com.mycompany.administracioneventos.modelos.Participante;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,5 +88,10 @@ public class CertificadoServicio
         {
             carpeta.mkdirs();
         }
+    }
+    
+    public ResultadoOperacion eliminarCertificadoSeguro(String correoParticipante, String codigoEvento)
+    {
+        return certificadoDAO.eliminarCertificadoSeguro(correoParticipante, codigoEvento);
     }
 }

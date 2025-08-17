@@ -9,6 +9,7 @@ import com.mycompany.administracioneventos.modelos.Asistencia;
 import com.mycompany.administracioneventos.modelos.Inscripcion;
 import com.mycompany.administracioneventos.modelos.Participante;
 import com.mycompany.administracioneventos.util.DBConnection;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -181,5 +182,68 @@ public class AsistenciaDAO
             System.err.println("Error al listar asistencias: " + e.getMessage());
         }
         return lista;
+    }
+    
+    public ResultadoOperacion eliminarAsistenciaSeguro(String correoParticipante, String codigoActividad)
+    {
+        String qEvento = "SELECT evento_codigo FROM actividad WHERE codigo = ?";
+        String qContar = "SELECT COUNT(*) FROM asistencia a JOIN actividad ac ON ac.codigo = a.actividad_codigo WHERE a.participante_correo = ? AND ac.evento_codigo = ?";
+        String qCertificado = "SELECT COUNT(*) FROM certificado WHERE participante_correo = ? AND evento_codigo = ?";
+        try (Connection conn = DBConnection.getConnection())
+        {
+            String codigoEvento = null;
+            try (PreparedStatement ps1 = conn.prepareStatement(qEvento))
+            {
+                ps1.setString(1, codigoActividad);
+                try (ResultSet rs = ps1.executeQuery())
+                {
+                    if (rs.next()) codigoEvento = rs.getString(1);
+                }
+            }
+            if (codigoEvento == null)
+            {
+                return ResultadoOperacion.fallo("La actividad no existe.");
+            }
+
+            int asistenciaEnEvento = contar2(conn, qContar, correoParticipante, codigoEvento);
+            int certificados = contar2(conn, qCertificado, correoParticipante, codigoEvento);
+
+            if (asistenciaEnEvento <= 1 && certificados > 0)
+            {
+                return ResultadoOperacion.fallo(
+                    "No se puede eliminar la asistencia: el participante tiene certificado para este evento y es su unica asistencia. "
+                    + "Elimina primero el certificado."
+                );
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM asistencia WHERE participante_correo = ? AND actividad_codigo = ?"))
+            {
+                ps.setString(1, correoParticipante);
+                ps.setString(2, codigoActividad);
+                int filas = ps.executeUpdate();
+                return filas > 0 ? ResultadoOperacion.ok("Asistencia eliminada.")
+                                 : ResultadoOperacion.fallo("Asistencia no encontrada.");
+            }
+        }
+        catch (SQLException e)
+        {
+            return ResultadoOperacion.fallo("Error al eliminar asistencia: " + e.getMessage());
+        }
+    }
+
+    
+    private int contar2(Connection conn, String sql, String parametro1, String parametro2) throws SQLException
+    {
+        try (PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setString(1, parametro1);
+            ps.setString(2, parametro2);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
     }
 }

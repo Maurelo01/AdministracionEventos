@@ -6,6 +6,7 @@ package com.mycompany.administracioneventos.servicios;
 
 import com.mycompany.administracioneventos.dao.*;
 import com.mycompany.administracioneventos.modelos.*;
+import com.mycompany.administracioneventos.util.ResultadoOperacion;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -67,5 +68,10 @@ public class ActividadServicio
     public boolean eliminarActividad(String codigoActividad)
     {
         return actividadDAO.eliminarActividad(codigoActividad);
+    }
+    
+    public ResultadoOperacion eliminarActividadSeguro(String codigoActividad)
+    {
+        return actividadDAO.eliminarActividadSeguro(codigoActividad);
     }
 }
