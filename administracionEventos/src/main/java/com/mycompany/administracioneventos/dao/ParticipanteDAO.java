@@ -175,7 +175,7 @@ public class ParticipanteDAO
         String qPago = "SELECT COUNT(*) FROM pago WHERE participante_correo=?";
         String qAsistencia = "SELECT COUNT(*) FROM asistencia WHERE participante_correo=?";
         String qCertificado = "SELECT COUNT(*) FROM certificado WHERE participante_correo=?";
-        String qEncargado = "SELECT COUNT(*) FROM actividad WHERE participante_correo=?";
+        String qEncargado = "SELECT COUNT(*) FROM actividad WHERE encargado_correo=?";
         try (Connection conn = DBConnection.getConnection())
         {
             int inscripcion = contar(conn, qInscripcion, correo);
@@ -186,10 +186,9 @@ public class ParticipanteDAO
             
             if (inscripcion + pago + asistencia + certificado + encargado > 0)
             {
-                return ResultadoOperacion.fallo(String.format("No se puede eliminar el participante, ya que el participante %s tiene archivos dependientes: ",
-                        "inscripciones = %d, pagos = %d, asistencia = %d, certificado = %d, encargado = %d", inscripcion, pago, asistencia, certificado, encargado));
+                return ResultadoOperacion.fallo(String.format("No se puede eliminar el participante, ya que el participante %s tiene archivos dependientes: inscripciones = %d, pagos = %d, asistencia = %d, certificado = %d, encargado = %d", correo, inscripcion, pago, asistencia, certificado, encargado));
             }
-            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM participante WHERE correo=?"))
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM participante WHERE correo = ?"))
             {
                 ps.setString(1, correo);
                 int filas = ps.executeUpdate();
