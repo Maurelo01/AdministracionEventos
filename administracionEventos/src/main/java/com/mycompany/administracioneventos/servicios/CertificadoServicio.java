@@ -34,6 +34,15 @@ public class CertificadoServicio
         this.certificadoHTML = new CertificadoHTML();
     }
     
+    public Certificado obtenerCertificado(String correoParticipante, String codigoEvento)
+    {
+        if (correoParticipante == null || correoParticipante.isBlank() || codigoEvento == null || codigoEvento.isBlank())
+        {
+            return null;
+        }
+        return certificadoDAO.buscarCertificado(correoParticipante, codigoEvento);
+    }
+    
     public Certificado generarYRegistrarCertificado(String correoParticipante, String codigoEvento, String directorioSalida, boolean exigirInscripcionValidada)
     {
         Participante participante = participanteDAO.buscarParticipante(correoParticipante);
@@ -74,11 +83,28 @@ public class CertificadoServicio
         return certificado;
     }
     
+    public Certificado obtenerOCrearCertificado(String correoParticipante, String codigoEvento, String directorioSalida, boolean exigirInscripcionValidada)
+    {
+        Certificado existente = certificadoDAO.buscarCertificado(correoParticipante, codigoEvento);
+        if (existente != null) return existente;
+        return generarYRegistrarCertificado(correoParticipante, codigoEvento, directorioSalida, exigirInscripcionValidada);
+    }
+    
     private List<Asistencia> obtenerAsistenciasDe(String correoParticipante, String codigoEvento)
     {
         return asistenciaDAO.listarAsistencias().stream().filter(a -> a.getParticipante() != null && a.getParticipante().getCorreo().equalsIgnoreCase(correoParticipante) &&
                 a.getActividad() != null && a.getActividad().getEvento() != null && 
                 a.getActividad().getEvento().getCodigo().equalsIgnoreCase(codigoEvento)).collect(Collectors.toList());
+    }
+    
+    public List<Certificado> listarPorEvento(String codigoEvento)
+    {
+        return certificadoDAO.listarPorEvento(codigoEvento);
+    }
+    
+    public List<Certificado> listarTodos()
+    {
+        return certificadoDAO.listarTodos();
     }
     
     private void asegurarDirectorio(String dir)

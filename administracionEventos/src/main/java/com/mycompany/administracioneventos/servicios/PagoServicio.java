@@ -58,13 +58,13 @@ public class PagoServicio
         return pagoDAO.listarPagosPorParticipante(correoParticipante);
     }
     
-    public boolean eliminarPagoPorId(int id)
+    public ResultadoOperacion eliminarPago(String correoParticipante, String codigoEvento, MetodoPago metodo, double monto)
     {
-        return pagoDAO.eliminarPagoPorId(id);
+        return pagoDAO.eliminarPago(correoParticipante, codigoEvento, metodo, monto);
     }
     
-    public ResultadoOperacion eliminarCertificadoSeguro(int id)
+    public ResultadoOperacion eliminarPagoSeguro(String correoParticipante, String codigoEvento)
     {
-        return pagoDAO.eliminarPagoSeguro(id);
+        return pagoDAO.eliminarPagoSeguro(correoParticipante, codigoEvento);
     }
 }

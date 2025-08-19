@@ -124,18 +124,29 @@ public class PagoDAO
     public List<Pago> listarPagos() // Lista los pagos de forma general
     {
         List<Pago> lista = new ArrayList<>();
-        String sql = "SELECT id, participante_correo, evento_codigo, metodo, monto, fecha_pago FROM pago";
+        String sql = "SELECT participante_correo, evento_codigo, metodo, monto, fecha_pago FROM pago";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery())
         {
             ParticipanteDAO pDAO = new ParticipanteDAO();
             EventoDAO eDAO = new EventoDAO();
+
             while (rs.next())
             {
                 String correoParticipante = rs.getString("participante_correo");
-                String codigoEvento = rs.getString("evento_codigo");
+                String codigoEvento       = rs.getString("evento_codigo");
+
                 Participante p = pDAO.buscarParticipante(correoParticipante);
-                Evento e = eDAO.buscarEvento(codigoEvento);
-                Pago pago = new Pago(p, e, MetodoPago.valueOf(rs.getString("metodo")), rs.getDouble("monto"));
+                Evento e       = eDAO.buscarEvento(codigoEvento);
+                if (p == null || e == null) continue;
+
+                MetodoPago metodo = MetodoPago.valueOf(rs.getString("metodo"));
+                double monto      = rs.getDouble("monto");
+
+                Pago pago = new Pago(p, e, metodo, monto);
+
+                Timestamp ts = rs.getTimestamp("fecha_pago");
+                if (ts != null) pago.setFechaPago(ts.toLocalDateTime());
+
                 lista.add(pago);
             }
         }
@@ -150,17 +161,30 @@ public class PagoDAO
     {
         List<Pago> lista = new ArrayList<>();
         String sql = "SELECT participante_correo, metodo, monto, fecha_pago FROM pago WHERE evento_codigo = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery())
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql))
         {
-            ps.setString(1, codigoEvento);
-            ParticipanteDAO pDAO = new ParticipanteDAO();
-            Evento e = new EventoDAO().buscarEvento(codigoEvento);
-            while (rs.next())
+            ps.setString(1, codigoEvento); // setea el parámetro ANTES del executeQuery
+            try (ResultSet rs = ps.executeQuery())
             {
-                String correoParticipante = rs.getString("participante_correo");
-                Participante p = pDAO.buscarParticipante(correoParticipante);
-                Pago pago = new Pago(p, e, MetodoPago.valueOf(rs.getString("metodo")), rs.getDouble("monto"));
-                lista.add(pago);
+                ParticipanteDAO pDAO = new ParticipanteDAO();
+                Evento evento = new EventoDAO().buscarEvento(codigoEvento);
+
+                while (rs.next())
+                {
+                    String correoParticipante = rs.getString("participante_correo");
+                    Participante p = pDAO.buscarParticipante(correoParticipante);
+                    if (p == null || evento == null) continue;
+
+                    MetodoPago metodo = MetodoPago.valueOf(rs.getString("metodo"));
+                    double monto      = rs.getDouble("monto");
+
+                    Pago pago = new Pago(p, evento, metodo, monto);
+
+                    Timestamp ts = rs.getTimestamp("fecha_pago");
+                    if (ts != null) pago.setFechaPago(ts.toLocalDateTime());
+
+                    lista.add(pago);
+                }
             }
         }
         catch (SQLException e)
@@ -174,17 +198,31 @@ public class PagoDAO
     {
         List<Pago> lista = new ArrayList<>();
         String sql = "SELECT evento_codigo, metodo, monto, fecha_pago FROM pago WHERE participante_correo = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery())
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql))
         {
-            ps.setString(1, correoParticipante);
-            Participante p = new ParticipanteDAO().buscarParticipante(correoParticipante);
-            EventoDAO eDAO = new EventoDAO();
-            while (rs.next())
+            ps.setString(1, correoParticipante); // setea el parámetro ANTES del executeQuery
+            try (ResultSet rs = ps.executeQuery())
             {
-                String codigoEvento = rs.getString("evento_codigo");
-                Evento e = eDAO.buscarEvento(codigoEvento);
-                Pago pago = new Pago(p, e, MetodoPago.valueOf(rs.getString("metodo")), rs.getDouble("monto"));
-                lista.add(pago);
+                Participante p = new ParticipanteDAO().buscarParticipante(correoParticipante);
+                EventoDAO eDAO = new EventoDAO();
+
+                while (rs.next())
+                {
+                    String codigoEvento = rs.getString("evento_codigo");
+                    Evento e = eDAO.buscarEvento(codigoEvento);
+                    if (p == null || e == null) continue;
+
+                    MetodoPago metodo = MetodoPago.valueOf(rs.getString("metodo"));
+                    double monto      = rs.getDouble("monto");
+
+                    Pago pago = new Pago(p, e, metodo, monto);
+
+                    Timestamp ts = rs.getTimestamp("fecha_pago");
+                    if (ts != null) pago.setFechaPago(ts.toLocalDateTime());
+
+                    lista.add(pago);
+                }
             }
         }
         catch (SQLException e)
@@ -194,61 +232,68 @@ public class PagoDAO
         return lista;
     }
     
-    public boolean eliminarPagoPorId(int id) // Elimina pagos por medio de id
+    public ResultadoOperacion eliminarPago(String correoParticipante, String codigoEvento, MetodoPago metodo, double monto) 
     {
-        String sql = "DELETE FROM pago WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql))
+        String qContar = "SELECT COUNT(*) FROM pago WHERE participante_correo = ? AND evento_codigo = ?";
+        String qValidado = "SELECT validada FROM inscripcion WHERE participante_correo = ? AND evento_codigo = ?";
+        try (Connection conn = DBConnection.getConnection()) 
         {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        }
-        catch (SQLException e)
+            int totalPagos = contar2(conn, qContar, correoParticipante, codigoEvento);
+            boolean validada = consultarValidada(conn, qValidado, correoParticipante, codigoEvento);
+            if (totalPagos == 0) 
+            {
+                return ResultadoOperacion.fallo("No hay pagos para eliminar.");
+            }
+            if (totalPagos <= 1 && validada) 
+            {
+                return ResultadoOperacion.fallo("No se puede eliminar el pago: es el único y la inscripción está validada.");
+            }
+            String qDelete = "DELETE FROM pago WHERE participante_correo = ? AND evento_codigo = ? AND metodo = ? AND monto = ? LIMIT 1";
+            try (PreparedStatement ps = conn.prepareStatement(qDelete)) 
+            {
+                ps.setString(1, correoParticipante);
+                ps.setString(2, codigoEvento);
+                ps.setString(3, metodo.name());
+                ps.setDouble(4, monto);
+                int filas = ps.executeUpdate();
+                return (filas > 0) ? ResultadoOperacion.ok("Pago eliminado.") : ResultadoOperacion.fallo("No se encontró un pago con esos datos.");
+            }
+        } 
+        catch (SQLException e) 
         {
-            System.err.println("Error al eliminar pago: " + e.getMessage());
-            return false;
+            return ResultadoOperacion.fallo("Error al eliminar pago: " + e.getMessage());
         }
     }
    
-    public ResultadoOperacion eliminarPagoSeguro(int id)
+    public ResultadoOperacion eliminarPagoSeguro(String correoParticipante, String codigoEvento) 
     {
-        String qInfo = "SELECT participante_correo, evento_codigo FROM pago WHERE id = ?";
-        String qContar = "SELECT COUNT(*) FROM pago WHERE participante_correo = ? AND evento_codigo = ? ";
+        String qContar = "SELECT COUNT(*) FROM pago WHERE participante_correo = ? AND evento_codigo = ?";
         String qValidado = "SELECT validada FROM inscripcion WHERE participante_correo = ? AND evento_codigo = ?";
-        try (Connection conn = DBConnection.getConnection())
+        try (Connection conn = DBConnection.getConnection()) 
         {
-            String correoParticipante = null;
-            String codigoEvento = null;
-            try (PreparedStatement ps1 = conn.prepareStatement(qInfo))
-            {
-                ps1.setInt(1, id);
-                try (ResultSet rs = ps1.executeQuery())
-                {
-                    if (rs.next())
-                    {
-                        correoParticipante = rs.getString(1);
-                        codigoEvento = rs.getString(2);
-                    }
-                }
-            }
-            if (correoParticipante == null)
-            {
-                return ResultadoOperacion.fallo("Pago no encotrado.");
-            }
             int totalPagos = contar2(conn, qContar, correoParticipante, codigoEvento);
             boolean validada = consultarValidada(conn, qValidado, correoParticipante, codigoEvento);
-            if (totalPagos <= 1 && validada)
+
+            if (totalPagos == 0) 
             {
-                return ResultadoOperacion.fallo("No se puede eliminar el pago ya que es el unico y la inscripcion esta validada."); 
+                return ResultadoOperacion.fallo("No hay pagos para eliminar.");
             }
-            try (PreparedStatement ps2 = conn.prepareStatement("DELETE FROM pago WHERE id = ?"))
+            if (totalPagos <= 1 && validada) 
             {
-                ps2.setString(1, correoParticipante);
-                ps2.setString(2, codigoEvento);
-                int filas = ps2.executeUpdate();
-                return filas > 0 ? ResultadoOperacion.ok("Pago eliminado.") : ResultadoOperacion.fallo("Pago no encontrado.");
+                return ResultadoOperacion.fallo("No se puede eliminar el pago: es el único y la inscripción está validada.");
+            }
+
+            // Elimina SOLO el más reciente
+            String qDelete = "DELETE FROM pago WHERE participante_correo = ? AND evento_codigo = ? ORDER BY fecha_pago DESC LIMIT 1";
+            try (PreparedStatement ps = conn.prepareStatement(qDelete)) 
+            {
+                ps.setString(1, correoParticipante);
+                ps.setString(2, codigoEvento);
+                int filas = ps.executeUpdate();
+                return (filas > 0) ? ResultadoOperacion.ok("Pago eliminado.") : ResultadoOperacion.fallo("No se pudo eliminar el pago.");
             }
         }
-        catch (SQLException e)
+        catch (SQLException e) 
         {
             return ResultadoOperacion.fallo("Error al eliminar pago: " + e.getMessage());
         }
