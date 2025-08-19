@@ -9,18 +9,22 @@ import javax.swing.UIManager;
 
 public class AplicacionSwing 
 {
-    public static void main(String[] args)
+    public static void iniciarAplicacion()
     {
-        SwingUtilities.invokeLater(() ->
+        try 
         {
-            try
-            {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            }
-            catch (Exception ignore) {}
-            VentanaPrincipal ventana = new VentanaPrincipal();
-            ventana.setVisible(true);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } 
+        catch (Exception e) 
+        {
+            System.err.println("Error al establecer el look and feel: " + e.getMessage());
         }
-        );
+        
+        VentanaPrincipal ventana = new VentanaPrincipal();
+        ventana.setVisible(true);
+    }
+    public static void main(String[] args) 
+    {
+        iniciarAplicacion();
     }
 }

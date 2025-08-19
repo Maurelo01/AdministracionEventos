@@ -4,11 +4,16 @@
 
 package com.mycompany.administracioneventos;
 
+import com.mycompany.administracioneventos.ui.AplicacionSwing;
+import javax.swing.SwingUtilities;
+
 public class AdministracionEventos 
 {
     public static void main(String[] args) 
     {
         System.out.println("Aplicación de Administración de Eventos iniciada.");
-        // Implementaciones por agregar
+        SwingUtilities.invokeLater(() -> {
+            AplicacionSwing.iniciarAplicacion();
+        });
     }
 }
