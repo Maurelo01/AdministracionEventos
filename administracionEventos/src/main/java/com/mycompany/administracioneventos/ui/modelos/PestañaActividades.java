@@ -12,11 +12,16 @@ import com.mycompany.administracioneventos.modelos.TipoInscripcion;
 import com.mycompany.administracioneventos.modelos.TipoParticipante;
 import com.mycompany.administracioneventos.servicios.ActividadServicio;
 import com.mycompany.administracioneventos.servicios.InscripcionServicio;
+import com.mycompany.administracioneventos.servicios.ReporteServicio;
 import com.mycompany.administracioneventos.ui.util.Alertas;
 import com.mycompany.administracioneventos.ui.util.ValidacionUtil;
 import com.mycompany.administracioneventos.util.ResultadoOperacion;
+import java.awt.Desktop;
+import java.io.File;
 import java.time.LocalTime;
 import java.util.List;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
@@ -29,6 +34,7 @@ public class PestañaActividades extends javax.swing.JPanel {
     private final ActividadServicio servicioActividad = new ActividadServicio();
     private final InscripcionServicio servicioInscripcion = new InscripcionServicio();
     private final Evento evento;
+    private final ReporteServicio servicioReporte = new ReporteServicio();
     private final DefaultTableModel modelo = new DefaultTableModel(new Object[]{"Evento", "Código", "Tipo", "Título", "Encargado", "Inicio", "Fin", "Cupo"}, 0) 
     {
         @Override public boolean isCellEditable(int r,int c){return false;}
@@ -173,7 +179,7 @@ public class PestañaActividades extends javax.swing.JPanel {
             Alertas.informacion(this, "Seleccione una actividad en la tabla."); 
             return; 
         }
-        String codigo = (String) modelo.getValueAt(fila, 0);
+        String codigo = (String) modelo.getValueAt(fila, 1);
         if (!Alertas.confirmar(this, "¿Eliminar la actividad " + codigo + "?")) return;
 
         try 
@@ -224,6 +230,7 @@ public class PestañaActividades extends javax.swing.JPanel {
         tablaActividades = new javax.swing.JTable();
         jLabel7 = new javax.swing.JLabel();
         cboTipo = new javax.swing.JComboBox<>();
+        btnReporteActividades = new javax.swing.JButton();
 
         jLabel1.setText("Código:");
 
@@ -292,6 +299,13 @@ public class PestañaActividades extends javax.swing.JPanel {
 
         cboTipo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        btnReporteActividades.setText("Generar Reporte");
+        btnReporteActividades.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReporteActividadesActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -320,7 +334,9 @@ public class PestañaActividades extends javax.swing.JPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnRefrescar)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnEliminar))
+                                .addComponent(btnEliminar)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnReporteActividades))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel3)
@@ -370,7 +386,8 @@ public class PestañaActividades extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAgregar)
                     .addComponent(btnRefrescar)
-                    .addComponent(btnEliminar))
+                    .addComponent(btnEliminar)
+                    .addComponent(btnReporteActividades))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(aaaa, javax.swing.GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
                 .addContainerGap())
@@ -393,12 +410,44 @@ public class PestañaActividades extends javax.swing.JPanel {
         onEliminar();
     }//GEN-LAST:event_btnEliminarActionPerformed
 
+    private void btnReporteActividadesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReporteActividadesActionPerformed
+    if (evento == null || evento.getCodigo() == null) 
+    {
+        Alertas.error(this, "No hay evento seleccionado.");
+        return;
+    }
+
+    // Carpeta de salida
+    JFileChooser fc = new JFileChooser();
+    fc.setDialogTitle("Elegir carpeta de salida");
+    fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    int r = fc.showSaveDialog(this);
+    if (r != JFileChooser.APPROVE_OPTION) return;
+    String dir = fc.getSelectedFile().getAbsolutePath();
+
+    ResultadoOperacion res = new ReporteServicio().generarReporteActividades(evento.getCodigo(), "", "", dir);
+    if (res.isOk()) 
+    {
+        Alertas.informacion(this, res.getMensaje());
+        try 
+        { 
+            Desktop.getDesktop().open(new File(dir)); 
+        } 
+        catch (Exception ignore) {}
+    } 
+    else 
+    {
+        Alertas.error(this, res.getMensaje());
+    }
+    }//GEN-LAST:event_btnReporteActividadesActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane aaaa;
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnRefrescar;
+    private javax.swing.JButton btnReporteActividades;
     private javax.swing.JComboBox<String> cboTipo;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

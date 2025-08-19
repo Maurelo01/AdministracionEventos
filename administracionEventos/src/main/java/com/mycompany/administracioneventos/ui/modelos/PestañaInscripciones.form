@@ -41,6 +41,8 @@
                               <Component id="btnEliminarInscripcion" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="btnRefrescarInscripciones" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="btnReporteParticipante" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
@@ -69,6 +71,7 @@
                   <Component id="btnValidarInscripcion" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnEliminarInscripcion" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnRefrescarInscripciones" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnReporteParticipante" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Component id="jScrollPane1" pref="162" max="32767" attributes="0"/>
@@ -161,5 +164,13 @@
         </Component>
       </SubComponents>
     </Container>
+    <Component class="javax.swing.JButton" name="btnReporteParticipante">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Generar Reporte"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnReporteParticipanteActionPerformed"/>
+      </Events>
+    </Component>
   </SubComponents>
 </Form>

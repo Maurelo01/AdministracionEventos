@@ -163,7 +163,7 @@ public class PagoDAO
         String sql = "SELECT participante_correo, metodo, monto, fecha_pago FROM pago WHERE evento_codigo = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql))
         {
-            ps.setString(1, codigoEvento); // setea el parámetro ANTES del executeQuery
+            ps.setString(1, codigoEvento);
             try (ResultSet rs = ps.executeQuery())
             {
                 ParticipanteDAO pDAO = new ParticipanteDAO();

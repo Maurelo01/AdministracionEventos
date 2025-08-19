@@ -6,15 +6,20 @@ package com.mycompany.administracioneventos.ui.modelos;
 
 import com.mycompany.administracioneventos.modelos.Evento;
 import com.mycompany.administracioneventos.servicios.EventoServicio;
+import com.mycompany.administracioneventos.servicios.ReporteServicio;
 import com.mycompany.administracioneventos.ui.util.Alertas;
 import com.mycompany.administracioneventos.util.ResultadoOperacion;
+import java.awt.Desktop;
 import java.awt.Frame;
+import java.io.File;
 import java.util.List;
+import javax.swing.JFileChooser;
 import javax.swing.table.DefaultTableModel;
 
 public class PanelEventos extends javax.swing.JPanel {
 
     private final EventoServicio eventoServicio = new EventoServicio();
+    private final ReporteServicio servicioReporte = new ReporteServicio();
     private final DefaultTableModel modelo = new DefaultTableModel(new Object[]{"Código", "Fecha", "Tipo", "Titulo", "Ubicacion", "Cupo Maximo"}, 0)
     {
         @Override
@@ -121,6 +126,7 @@ public class PanelEventos extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaEventos = new javax.swing.JTable();
         btnDetalles = new javax.swing.JButton();
+        btnReporteEventos = new javax.swing.JButton();
 
         setPreferredSize(new java.awt.Dimension(370, 400));
 
@@ -185,6 +191,13 @@ public class PanelEventos extends javax.swing.JPanel {
             }
         });
 
+        btnReporteEventos.setText("Generar Reporte");
+        btnReporteEventos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReporteEventosActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -209,7 +222,10 @@ public class PanelEventos extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnBuscar)
-                            .addComponent(btnDetalles))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(btnDetalles)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnReporteEventos)))
                         .addGap(0, 0, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
@@ -228,7 +244,9 @@ public class PanelEventos extends javax.swing.JPanel {
                     .addComponent(btnEliminar)
                     .addComponent(btnNuevo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnDetalles)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnDetalles)
+                    .addComponent(btnReporteEventos))
                 .addGap(24, 24, 24)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
                 .addContainerGap())
@@ -342,6 +360,37 @@ public class PanelEventos extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnDetallesActionPerformed
 
+    private void btnReporteEventosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReporteEventosActionPerformed
+          // Carpeta de salida
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Elegir carpeta de salida");
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int r = fc.showSaveDialog(this);
+        if (r != JFileChooser.APPROVE_OPTION) return;
+
+        String dir = fc.getSelectedFile().getAbsolutePath();
+
+        // Sin pedir filtros: usamos un rango de cupo amplio para cumplir la validación del método
+        ResultadoOperacion res = servicioReporte.generarReporteEventos(
+                null,   
+                null,   
+                null,   
+                1,     
+                1_000_000, 
+                dir   
+        );
+
+        if (res.isOk()) 
+        {
+            Alertas.informacion(this, res.getMensaje());
+            try { Desktop.getDesktop().open(new File(dir)); } catch (Exception ignore) {}
+        } 
+        else 
+        {
+            Alertas.error(this, res.getMensaje());
+        }
+    }//GEN-LAST:event_btnReporteEventosActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscar;
@@ -350,6 +399,7 @@ public class PanelEventos extends javax.swing.JPanel {
     private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnNuevo;
     private javax.swing.JButton btnRefrescar;
+    private javax.swing.JButton btnReporteEventos;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tablaEventos;

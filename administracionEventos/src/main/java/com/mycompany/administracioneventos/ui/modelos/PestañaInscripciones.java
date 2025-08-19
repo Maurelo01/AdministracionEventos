@@ -9,21 +9,24 @@ import com.mycompany.administracioneventos.modelos.Inscripcion;
 import com.mycompany.administracioneventos.modelos.TipoInscripcion;
 import com.mycompany.administracioneventos.servicios.InscripcionServicio;
 import com.mycompany.administracioneventos.servicios.ParticipanteServicio;
+import com.mycompany.administracioneventos.servicios.ReporteServicio;
 import com.mycompany.administracioneventos.ui.util.Alertas;
 import com.mycompany.administracioneventos.ui.util.ValidacionUtil;
 import com.mycompany.administracioneventos.util.ResultadoOperacion;
+import java.awt.Desktop;
+import java.io.File;
 import java.util.List;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author mauricio
- */
 public class PestañaInscripciones extends javax.swing.JPanel 
 {
     private final InscripcionServicio servicioInscripcion = new InscripcionServicio();
     private final ParticipanteServicio servicioParticipante = new ParticipanteServicio();
     private final Evento evento;
+    private final ReporteServicio servicioReporte = new ReporteServicio();
+
     private final DefaultTableModel modelo = new DefaultTableModel(new Object[]{"Correo", "Tipo", "Validada"}, 0)
     {
         @Override
@@ -176,6 +179,7 @@ public class PestañaInscripciones extends javax.swing.JPanel
         btnRefrescarInscripciones = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaInscripciones = new javax.swing.JTable();
+        btnReporteParticipante = new javax.swing.JButton();
 
         jLabel1.setText("Correo:");
 
@@ -231,6 +235,13 @@ public class PestañaInscripciones extends javax.swing.JPanel
         ));
         jScrollPane1.setViewportView(tablaInscripciones);
 
+        btnReporteParticipante.setText("Generar Reporte");
+        btnReporteParticipante.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReporteParticipanteActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -256,7 +267,9 @@ public class PestañaInscripciones extends javax.swing.JPanel
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnEliminarInscripcion)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRefrescarInscripciones)))
+                                .addComponent(btnRefrescarInscripciones)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnReporteParticipante)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -276,7 +289,8 @@ public class PestañaInscripciones extends javax.swing.JPanel
                     .addComponent(btnAgregarInscripcion)
                     .addComponent(btnValidarInscripcion)
                     .addComponent(btnEliminarInscripcion)
-                    .addComponent(btnRefrescarInscripciones))
+                    .addComponent(btnRefrescarInscripciones)
+                    .addComponent(btnReporteParticipante))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
                 .addContainerGap())
@@ -303,11 +317,41 @@ public class PestañaInscripciones extends javax.swing.JPanel
         recargar();
     }//GEN-LAST:event_btnRefrescarInscripcionesActionPerformed
 
+    private void btnReporteParticipanteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReporteParticipanteActionPerformed
+        if (evento == null || evento.getCodigo() == null)
+        {
+            Alertas.error(this, "No hay evento seleccionado.");
+            return;
+        }
+        // Carpeta de salida
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Elegir carpeta de salida");
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int r = fc.showSaveDialog(this);
+        if (r != JFileChooser.APPROVE_OPTION) return;
+        String dir = fc.getSelectedFile().getAbsolutePath();
+        ResultadoOperacion res = servicioReporte.generarReporteParticipantes(evento.getCodigo(), "", "", dir);
+        if (res.isOk())
+        {
+            Alertas.informacion(this, res.getMensaje());
+            try 
+            { 
+                Desktop.getDesktop().open(new File(dir)); 
+            }
+            catch (Exception ignore) {}
+        }
+        else 
+        {
+            Alertas.error(this, res.getMensaje());
+        }
+    }//GEN-LAST:event_btnReporteParticipanteActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAgregarInscripcion;
     private javax.swing.JButton btnEliminarInscripcion;
     private javax.swing.JButton btnRefrescarInscripciones;
+    private javax.swing.JButton btnReporteParticipante;
     private javax.swing.JButton btnValidarInscripcion;
     private javax.swing.JComboBox<String> cboTipoInscripcion;
     private javax.swing.JLabel jLabel1;
