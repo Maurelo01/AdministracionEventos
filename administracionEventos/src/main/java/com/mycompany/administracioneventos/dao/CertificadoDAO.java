@@ -146,6 +146,64 @@ public class CertificadoDAO
         return lista;
     }
     
+    public List<Certificado> listarPorEvento(String codigoEvento) // Lista certificados de un evento específico
+    {
+        List<Certificado> lista = new ArrayList<>();
+        String sql = "SELECT participante_correo, evento_codigo, fecha_emision, ruta_archivo FROM certificado WHERE evento_codigo = ? ORDER BY participante_correo";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql))
+        {
+            ps.setString(1, codigoEvento);
+            try (ResultSet rs = ps.executeQuery())
+            {
+                ParticipanteDAO participanteDAO = new ParticipanteDAO();
+                EventoDAO eventoDAO = new EventoDAO();
+                Evento evento = eventoDAO.buscarEvento(codigoEvento);
+                while (rs.next())
+                {
+                    String correoParticipante = rs.getString("participante_correo");
+                    Participante participante = participanteDAO.buscarParticipante(correoParticipante);
+                    if (participante == null || evento == null) continue;
+                    Certificado certificado = new Certificado(participante, evento, rs.getString("ruta_archivo"));
+                    Timestamp ts = rs.getTimestamp("fecha_emision");
+                    if (ts != null) certificado.setFechaEmision(ts.toLocalDateTime());
+                    lista.add(certificado);
+                }
+            }
+        }
+        catch (SQLException e)
+        {
+            System.err.println("Error al listar certificados por evento: " + e.getMessage());
+        }
+        return lista;
+    }
+    public List<Certificado> listarTodos() // lista todos los certificados
+    {
+        String sql = "SELECT c.participante_correo, c.evento_codigo, c.fecha_emision, c.ruta_archivo FROM certificado c ORDER BY c.evento_codigo, c.participante_correo";
+        List<Certificado> out = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery())
+        {
+            ParticipanteDAO pdao = new ParticipanteDAO();
+            EventoDAO edao = new EventoDAO();
+            while (rs.next())
+            {
+                String correo = rs.getString("participante_correo");
+                String evCod  = rs.getString("evento_codigo");
+                Timestamp ts  = rs.getTimestamp("fecha_emision");
+                String ruta   = rs.getString("ruta_archivo");
+                var part = pdao.buscarParticipante(correo);
+                var ev = edao.buscarEvento(evCod);
+                var cert = new Certificado(part, ev, ruta);
+                if (ts != null) cert.setFechaEmision(ts.toLocalDateTime());
+                out.add(cert);
+            }
+        }
+        catch (SQLException e) 
+        {
+            System.err.println("Error al listar certificados: " + e.getMessage());
+        }
+        return out;
+    }
+    
     public boolean eliminarCertificado(String correoParticipante, String codigoEvento) // Elimina un certificado
     {
         String sql = "DELETE FROM certificado WHERE participante_correo = ? AND evento_codigo = ?";

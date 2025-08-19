@@ -28,6 +28,29 @@ public class PanelEventos extends javax.swing.JPanel {
     {
         initComponents();
         tablaEventos.setModel(modelo);
+        tablaEventos.addMouseListener(new java.awt.event.MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) 
+            {
+                if (e.getClickCount() == 2 && javax.swing.SwingUtilities.isLeftMouseButton(e)) 
+                {
+                    btnDetallesActionPerformed(null);
+                }   
+            }
+        });
+        tablaEventos.addKeyListener(new java.awt.event.KeyAdapter() 
+        {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) 
+            {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) 
+                {
+                    e.consume();
+                    btnDetallesActionPerformed(null);
+                }
+            }
+        });
         tablaEventos.setRowHeight(22);
         cargarEventos();
     }
@@ -97,6 +120,7 @@ public class PanelEventos extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaEventos = new javax.swing.JTable();
+        btnDetalles = new javax.swing.JButton();
 
         setPreferredSize(new java.awt.Dimension(370, 400));
 
@@ -145,17 +169,21 @@ public class PanelEventos extends javax.swing.JPanel {
 
         tablaEventos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+
             }
         ));
         tablaEventos.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
         jScrollPane1.setViewportView(tablaEventos);
+
+        btnDetalles.setText("Detalles");
+        btnDetalles.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDetallesActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -164,9 +192,6 @@ public class PanelEventos extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnBuscar)
-                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
@@ -180,7 +205,12 @@ public class PanelEventos extends javax.swing.JPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(btnEliminar))
                             .addComponent(txtCodigoBuscar))
-                        .addContainerGap())))
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnBuscar)
+                            .addComponent(btnDetalles))
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -197,8 +227,10 @@ public class PanelEventos extends javax.swing.JPanel {
                     .addComponent(btnRefrescar)
                     .addComponent(btnEliminar)
                     .addComponent(btnNuevo))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnDetalles)
+                .addGap(24, 24, 24)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -283,9 +315,37 @@ public class PanelEventos extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnEliminarActionPerformed
 
+    private void btnDetallesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetallesActionPerformed
+        int fila = tablaEventos.getSelectedRow();
+        if (fila < 0) 
+        {
+            Alertas.informacion(this, "Seleccione un evento.");
+            return;
+        }
+        String codigo = (String) modelo.getValueAt(fila, 0);
+        try
+        {
+            Evento evento = eventoServicio.buscarEventoPorCodigo(codigo);
+            if (evento == null) 
+            {
+                Alertas.error(this, "No se encontró el evento.");
+                return;
+            }
+            DialogoEventoDetalle dialogo = new DialogoEventoDetalle((Frame) javax.swing.SwingUtilities.getWindowAncestor(this), evento);
+            dialogo.setLocationRelativeTo(this);
+            dialogo.setVisible(true);
+            cargarEventos();
+        }
+        catch (Exception ex) 
+        {
+            Alertas.error(this, "Error al abrir detalles: " + ex.getMessage());
+        }
+    }//GEN-LAST:event_btnDetallesActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscar;
+    private javax.swing.JButton btnDetalles;
     private javax.swing.JButton btnEditar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnNuevo;
